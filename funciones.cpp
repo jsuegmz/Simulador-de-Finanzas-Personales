@@ -40,8 +40,49 @@ void ingresarDatosDiarios() {
         cout << "¿Deseas ingresar más datos? (S/N): ";
         cin >> opcion;
     } while (opcion == 'S' || opcion == 's');
-    
+    sumarUnDia();
+    actualizarFecha();
     fclose(archivoHistorial);
+}
+
+void sumarUnDia() {
+    if (datosGenerales.fechaActual.mes == 2) {
+        if (datosGenerales.fechaActual.dia == 28) {
+            if ((datosGenerales.fechaActual.ano % 4 == 0 && datosGenerales.fechaActual.ano % 100 != 0) || (datosGenerales.fechaActual.ano % 400 == 0)) {
+                datosGenerales.fechaActual.dia++;
+            } else {
+                datosGenerales.fechaActual.dia = 1;
+                datosGenerales.fechaActual.mes++;
+            }
+        } else if (datosGenerales.fechaActual.dia == 29) {
+            datosGenerales.fechaActual.dia = 1;
+            datosGenerales.fechaActual.mes++;
+        } else {
+            datosGenerales.fechaActual.dia++;
+        }
+    } else if (datosGenerales.fechaActual.mes == 4 || datosGenerales.fechaActual.mes == 6 || datosGenerales.fechaActual.mes == 9 || datosGenerales.fechaActual.mes == 11) {
+        if (datosGenerales.fechaActual.dia < 30) {
+            datosGenerales.fechaActual.dia++;
+        } else {
+            datosGenerales.fechaActual.dia = 1;
+            datosGenerales.fechaActual.mes++;
+        }
+    } else if (datosGenerales.fechaActual.dia < 31) {
+        datosGenerales.fechaActual.dia++;
+    } else if (datosGenerales.fechaActual.mes < 12) {
+        datosGenerales.fechaActual.dia = 1;
+        datosGenerales.fechaActual.mes++;
+    } else {
+        datosGenerales.fechaActual.dia = 1;
+        datosGenerales.fechaActual.mes = 1;
+        datosGenerales.fechaActual.ano++;
+    }
+}
+
+void actualizarFecha() {
+    archivoGeneral = fopen("GENERAL.txt", "w");
+    fprintf(archivoGeneral, "%f\n%d\n%d\n%d\n", datosGenerales.saldoActual, datosGenerales.fechaActual.dia, datosGenerales.fechaActual.mes, datosGenerales.fechaActual.ano);
+    fclose(archivoGeneral);
 }
 
 void mostrarHistorial() {
