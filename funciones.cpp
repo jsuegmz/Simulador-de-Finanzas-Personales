@@ -21,6 +21,14 @@ struct diario{
 
 FILE *archivoGeneral, *archivoHistorial;
 
+void ingresarDatosDiarios();
+void sumarUnDia();
+void actualizarFecha();
+void ingresarDatosDiarios();
+void mostrarHistorial();
+void datosIniciales();
+void mostrarDatosGenerales();
+
 void ingresarDatosDiarios() {
     char opcion;
     archivoHistorial = fopen("HISTORIAL.txt", "a");
@@ -104,9 +112,7 @@ void mostrarHistorial() {
 }
 
 void datosIniciales()
-{
-    archivoGeneral = fopen("GENERAL.txt", "r");
-    
+{   
     if (archivoGeneral == NULL) {
         cout << "Bienvenido al sistema de simulador de finanzas personales" << endl;
         cout << "Como es tu primera vez iniciando el programa, ingresa estos datos iniciales" << endl;
@@ -123,16 +129,23 @@ void datosIniciales()
         archivoGeneral = fopen("GENERAL.txt", "w");
         fprintf(archivoGeneral, "%f\n%d\n%d\n%d\n", datosGenerales.saldoActual, datosGenerales.fechaActual.dia, datosGenerales.fechaActual.mes, datosGenerales.fechaActual.ano);
         fclose(archivoGeneral);
-    } else {
-        fscanf(archivoGeneral, "%f", &datosGenerales.saldoActual);
-        fscanf(archivoGeneral, "%d", &datosGenerales.fechaActual.dia);
-        fscanf(archivoGeneral, "%d", &datosGenerales.fechaActual.mes);
-        fscanf(archivoGeneral, "%d", &datosGenerales.fechaActual.ano);
-        fclose(archivoGeneral);
     }
+}
 
+void mostrarDatosGenerales(){
+	
+	archivoGeneral = fopen("GENERAL.txt", "r");
+	
+	fscanf(archivoGeneral, "%f", &datosGenerales.saldoActual);
+    fscanf(archivoGeneral, "%d", &datosGenerales.fechaActual.dia);
+    fscanf(archivoGeneral, "%d", &datosGenerales.fechaActual.mes);
+    fscanf(archivoGeneral, "%d", &datosGenerales.fechaActual.ano);
+    fclose(archivoGeneral);
+    
     cout << "Saldo actual: " << datosGenerales.saldoActual << endl;
     cout << "Fecha actual: " << datosGenerales.fechaActual.dia << "/" << datosGenerales.fechaActual.mes << "/" << datosGenerales.fechaActual.ano << endl;
+    fclose(archivoGeneral);
+
 }
 
 int main()
@@ -142,6 +155,7 @@ int main()
     int opcion;
 
     do {
+    	mostrarDatosGenerales();
         cout << "Elige una opción:" << endl;
         cout << "1. Ingresar datos diarios" << endl;
         cout << "2. Mostrar datos diarios" << endl;
