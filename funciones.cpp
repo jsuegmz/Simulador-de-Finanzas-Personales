@@ -72,11 +72,18 @@ void crearReporteDiario(fecha fechaABuscar); //Crea un reporte diario y lo guard
 void mostrarReporteDiario(fecha fechaABuscar); //Muestra el reporte diario de una fecha específica
 void crearReporteMensual(int mesABuscar, int anoABuscar); //Crea un reporte mensual y lo guarda en "REPORTESMENSUALES.txt"
 void mostrarReporteMensual(int mesABuscar, int anoABuscar); //Muestra el reporte mensual de un mes y año específicos
+void mostrarReporteMensualTemporal();
+void crearReporteAnualTemporal();
 void crearReporteAnual(int anoABuscar); //Crea un reporte anual y lo guarda en "REPORTESANUALES.txt"
+void crearReporteAnualTemporal();
 void mostrarReporteAnual(int anoABuscar); //Muestra el reporte anual de un año específico
+void mostrarReporteAnualTemporal();
 void elegirYMostrarReporte(); //Pregunta qué tipo de reporte (diario, mensual o anual) mostrar y muestra el reporte correspondiente
 void crearReportes(); //Verifica la fecha y se crean los reportes. Todos los dias se crean los diarios, los mensuales a fin de mes y los anuales a fin de año
-
+void compararReportes(); //Llama a las demás funciones de comparar reportes
+void compararReportesDiarios(fecha fechaABuscar1, fecha fechaABuscar2); //Compara los reportes diarios
+void compararReportesMensuales(int mesABuscar1, int anoABuscar1, int mesABuscar2, int anoABuscar2); //Compara los reportes mensuales
+void compararReportesAnuales(int anoABuscar1, int anoABuscar2); //Compara los reportes anuales
 
 void ingresarDatosDiarios(){
     archivoHistorial = fopen("HISTORIAL.txt", "a");
@@ -152,8 +159,6 @@ void crearReporteMensual(int mesABuscar, int anoABuscar) {
     reporteMensual.promedioIngresosDiario = reporteMensual.totalIngresos / diasDelMes;
     reporteMensual.promedioGastosDiario = reporteMensual.totalGastos / diasDelMes;
     reporteMensual.totalMes = reporteMensual.totalIngresos - reporteMensual.totalGastos;
-    datosGenerales.saldoActual += reporteMensual.totalMes;
-    actualizarGeneral();
 
     fprintf(archivoReportesMensuales, "%d,%d,%f,%f,%f,%f,%f\n", reporteMensual.mes, reporteMensual.ano, reporteMensual.totalIngresos, reporteMensual.totalGastos, reporteMensual.promedioIngresosDiario, reporteMensual.promedioGastosDiario, reporteMensual.totalMes);
 
@@ -161,6 +166,34 @@ void crearReporteMensual(int mesABuscar, int anoABuscar) {
     fclose(archivoReportesMensuales);
 
     cout << "Se ha creado un reporte mensual" << endl;
+}
+
+void crearReporteMensualTemporal() {
+    FILE *archivoReportesDiarios = fopen("REPORTESDIARIOS.txt", "r");
+    FILE *archivoReporteMensualTemporal = fopen("REPORTEMENSUALTEMPORAL.txt", "w");
+
+    reporteMensual.mes = datosGenerales.fechaActual.mes;
+    reporteMensual.ano = datosGenerales.fechaActual.ano;
+    reporteMensual.totalIngresos = 0;
+    reporteMensual.totalGastos = 0;
+    int diasDelMes = 0;
+
+    while (fscanf(archivoReportesDiarios, "%d,%d,%d,%f,%f,%f", &reporteDiario.dia, &reporteDiario.mes, &reporteDiario.ano, &reporteDiario.totalIngresos, &reporteDiario.totalGastos, &reporteDiario.totalDia) != EOF) {
+        if (reporteDiario.mes == datosGenerales.fechaActual.mes && reporteDiario.ano == datosGenerales.fechaActual.ano) {
+            reporteMensual.totalIngresos += reporteDiario.totalIngresos;
+            reporteMensual.totalGastos += reporteDiario.totalGastos;
+            diasDelMes++;
+        }
+    }
+
+    reporteMensual.promedioIngresosDiario = reporteMensual.totalIngresos / diasDelMes;
+    reporteMensual.promedioGastosDiario = reporteMensual.totalGastos / diasDelMes;
+    reporteMensual.totalMes = reporteMensual.totalIngresos - reporteMensual.totalGastos;
+
+    fprintf(archivoReporteMensualTemporal, "%d,%d,%f,%f,%f,%f,%f\n", reporteMensual.mes, reporteMensual.ano, reporteMensual.totalIngresos, reporteMensual.totalGastos, reporteMensual.promedioIngresosDiario, reporteMensual.promedioGastosDiario, reporteMensual.totalMes);
+
+    fclose(archivoReportesDiarios);
+    fclose(archivoReporteMensualTemporal);
 }
 
 void crearReporteAnual(int anoABuscar) {
@@ -183,13 +216,48 @@ void crearReporteAnual(int anoABuscar) {
     reporteAnual.promedioIngresosMensual = reporteAnual.totalIngresos / mesesDelAno;
     reporteAnual.promedioGasrosMensal = reporteAnual.totalGastos / mesesDelAno;
     reporteAnual.totalAno = reporteAnual.totalIngresos - reporteAnual.totalGastos;
-    datosGenerales.saldoActual += reporteAnual.totalAno;
-    actualizarGeneral();
 
     fprintf(archivoReportesAnuales, "%d,%f,%f,%f,%f,%f\n", reporteAnual.ano, reporteAnual.totalIngresos, reporteAnual.totalGastos, reporteAnual.promedioIngresosMensual, reporteAnual.promedioGasrosMensal, reporteAnual.totalAno);
 
     fclose(archivoReportesMensuales);
     fclose(archivoReportesAnuales);
+
+    cout << "Se ha creado un reporte anual";
+}
+
+void crearReporteAnualTemporal() {
+    FILE *archivoReportesMensuales = fopen("REPORTESMENSUALES.txt", "r");
+    FILE *archivoReporteMensualTemporal = fopen("REPORTEMENSUALTEMPORAL.txt", "r");
+    FILE *archivoReporteAnualTemporal = fopen("REPORTEANUALTEMPORAL.txt", "w");
+
+    reporteAnual.ano = datosGenerales.fechaActual.ano;
+    reporteAnual.totalIngresos = 0;
+    reporteAnual.totalGastos = 0;
+    int mesesDelAno = 0;
+
+    while (fscanf(archivoReportesMensuales, "%d,%d,%f,%f,%f,%f,%f", &reporteMensual.mes, &reporteMensual.ano, &reporteMensual.totalIngresos, &reporteMensual.totalGastos, &reporteMensual.promedioIngresosDiario, &reporteMensual.promedioGastosDiario, &reporteMensual.totalMes) != EOF) {
+        if (reporteMensual.ano == datosGenerales.fechaActual.ano) {
+            reporteAnual.totalIngresos += reporteMensual.totalIngresos;
+            reporteAnual.totalGastos += reporteMensual.totalGastos;
+            mesesDelAno++;
+        }
+    }
+
+    fscanf(archivoReporteMensualTemporal, "%d,%d,%f,%f,%f,%f,%f", &reporteMensual.mes, &reporteMensual.ano, &reporteMensual.totalIngresos, &reporteMensual.totalGastos, &reporteMensual.promedioIngresosDiario, &reporteMensual.promedioGastosDiario, &reporteMensual.totalMes);
+    reporteAnual.totalIngresos += reporteMensual.totalIngresos;
+    reporteAnual.totalGastos += reporteMensual.totalGastos;
+    mesesDelAno++;
+    
+    reporteAnual.promedioIngresosMensual = reporteAnual.totalIngresos / mesesDelAno;
+    reporteAnual.promedioGasrosMensal = reporteAnual.totalGastos / mesesDelAno;
+    reporteAnual.totalAno = reporteAnual.totalIngresos - reporteAnual.totalGastos;
+
+    fprintf(archivoReporteAnualTemporal, "%d,%f,%f,%f,%f,%f\n", reporteAnual.ano, reporteAnual.totalIngresos, reporteAnual.totalGastos, reporteAnual.promedioIngresosMensual, reporteAnual.promedioGasrosMensal, reporteAnual.totalAno);
+
+    fclose(archivoReportesMensuales);
+    fclose(archivoReporteAnualTemporal);
+    fclose(archivoReporteMensualTemporal);
+
 }
 
 void agregarDatosAutomatizados() {
@@ -257,7 +325,7 @@ void guardarDatosAutomatizados()
     fclose(archivoHistorial);
 
     if(contador >= 1){
-        cout << "Se han ingresado " << contador << " datos automatizados" << endl;
+        cout << "Se han ingresado " << contador << " datos automatizados para el dia " << datosGenerales.fechaActual.dia << "/" << datosGenerales.fechaActual.mes << "/" << datosGenerales.fechaActual.ano << endl;
     }
 }
 
@@ -491,6 +559,21 @@ void mostrarReporteMensual(int mesABuscar, int anoABuscar) {
     fclose(archivoReportesMensuales);
 }
 
+void mostrarReporteMensualTemporal(){
+    FILE *archivoReporteMensualTemporal = fopen("REPORTEMENSUALTEMPORAL.txt", "r");
+    fscanf(archivoReporteMensualTemporal, "%d,%d,%f,%f,%f,%f,%f", &reporteMensual.mes, &reporteMensual.ano, &reporteMensual.totalIngresos, &reporteMensual.totalGastos, &reporteMensual.promedioIngresosDiario, &reporteMensual.promedioGastosDiario, &reporteMensual.totalMes);
+
+    cout << "Mes: " << reporteMensual.mes << endl;
+    cout << "Año: " << reporteMensual.ano << endl;
+    cout << "Total de ingresos: " << reporteMensual.totalIngresos << endl;
+    cout << "Total de gastos: " << reporteMensual.totalGastos << endl;
+    cout << "Promedio de ingresos diarios: " << reporteMensual.promedioIngresosDiario << endl;
+    cout << "Promedio de gastos diarios: " << reporteMensual.promedioGastosDiario << endl;
+    cout << "Total del mes: " << reporteMensual.totalMes << endl;
+
+    fclose(archivoReporteMensualTemporal);
+}
+
 void mostrarReporteAnual(int anoABuscar) {
     FILE *archivoReportesAnuales = fopen("REPORTESANUALES.txt", "r");
 
@@ -509,6 +592,21 @@ void mostrarReporteAnual(int anoABuscar) {
     fclose(archivoReportesAnuales);
 }
 
+void mostrarReporteAnualTemporal() {
+    FILE *archivoReporteAnualTemporal = fopen("REPORTEANUALTEMPORAL.txt", "r");
+
+    fscanf(archivoReporteAnualTemporal, "%d,%f,%f,%f,%f,%f", &reporteAnual.ano, &reporteAnual.totalIngresos, &reporteAnual.totalGastos, &reporteAnual.promedioIngresosMensual, &reporteAnual.promedioGasrosMensal, &reporteAnual.totalAno);
+    
+    cout << "Año: " << reporteAnual.ano << endl;
+    cout << "Total de ingresos: " << reporteAnual.totalIngresos << endl;
+    cout << "Total de gastos: " << reporteAnual.totalGastos << endl;
+    cout << "Promedio de ingresos mensuales: " << reporteAnual.promedioIngresosMensual << endl;
+    cout << "Promedio de gastos mensuales: " << reporteAnual.promedioGasrosMensal << endl;
+    cout << "Total del año: " << reporteAnual.totalAno << endl;
+
+    fclose(archivoReporteAnualTemporal);
+}
+
 void elegirYMostrarReporte() {
     int opcion;
     fecha fechaABuscar;
@@ -517,6 +615,10 @@ void elegirYMostrarReporte() {
     cout << "1. Ver reporte diario" << endl;
     cout << "2. Ver reporte mensual" << endl;
     cout << "3. Ver reporte anual" << endl;
+    cout << "4. Ver reporte mensual temporal" << endl;
+    cout << "5. Ver reporte anual temporal" << endl;
+    cout << "6. Comparar reportes" << endl;
+
     cin >> opcion;
 
     switch (opcion) {
@@ -559,15 +661,188 @@ void elegirYMostrarReporte() {
                 cout << "No hay informacion sobre el reporte anual del ano proporcionado." << endl;
             }
             break;
+        case 4:
+            mostrarReporteMensualTemporal();
+            break;
+        case 5:
+            mostrarReporteAnualTemporal();
+            break;
+        case 6:
+            compararReportes();
+            break;
         default:
             cout << "Opcion no valida. Por favor, elige una opcion del 1 al 3." << endl;
             break;
     }
 }
 
+void compararReportes() {
+    int opcion;
+    fecha fechaABuscar1, fechaABuscar2;
+
+    cout << "Elige una opcion:" << endl;
+    cout << "1. Comparar reportes diarios" << endl;
+    cout << "2. Comparar reportes mensuales" << endl;
+    cout << "3. Comparar reportes anuales" << endl;
+    cin >> opcion;
+
+    switch (opcion) {
+        case 1:
+            cout << "Ingresa la fecha del primer reporte diario que deseas comparar." << endl;
+            cout << "Dia: ";
+            cin >> fechaABuscar1.dia;
+            cout << "Mes: ";
+            cin >> fechaABuscar1.mes;
+            cout << "Año: ";
+            cin >> fechaABuscar1.ano;
+
+            cout << "Ingresa la fecha del segundo reporte diario que deseas comparar." << endl;
+            cout << "Dia: ";
+            cin >> fechaABuscar2.dia;
+            cout << "Mes: ";
+            cin >> fechaABuscar2.mes;
+            cout << "Año: ";
+            cin >> fechaABuscar2.ano;
+
+            if (fopen("REPORTESDIARIOS.txt", "r") != NULL) {
+                compararReportesDiarios(fechaABuscar1, fechaABuscar2);
+            } else {
+                cout << "No hay informacion sobre los reportes diarios de las fechas proporcionadas." << endl;
+            }
+            break;
+        case 2:
+            cout << "Ingresa el mes y ano del primer reporte mensual que deseas comparar." << endl;
+            cout << "Mes: ";
+            cin >> fechaABuscar1.mes;
+            cout << "Año: ";
+            cin >> fechaABuscar1.ano;
+
+            cout << "Ingresa el mes y ano del segundo reporte mensual que deseas comparar." << endl;
+            cout << "Mes: ";
+            cin >> fechaABuscar2.mes;
+            cout << "Año: ";
+            cin >> fechaABuscar2.ano;
+
+            if (fopen("REPORTESMENSUALES.txt", "r") != NULL) {
+                compararReportesMensuales(fechaABuscar1.mes, fechaABuscar1.ano, fechaABuscar2.mes, fechaABuscar2.ano);
+            } else {
+                cout << "No hay informacion sobre los reportes mensuales de los meses y anos proporcionados." << endl;
+            }
+            break;
+        case 3:
+            cout << "Ingresa el ano del primer reporte anual que deseas comparar." << endl;
+            cout << "Año: ";
+            cin >> fechaABuscar1.ano;
+
+            cout << "Ingresa el ano del segundo reporte anual que deseas comparar." << endl;
+            cout << "Año: ";
+            cin >> fechaABuscar2.ano;
+
+            if (fopen("REPORTESANUALES.txt", "r") != NULL) {
+                compararReportesAnuales(fechaABuscar1.ano, fechaABuscar2.ano);
+            } else {
+                cout << "No hay informacion sobre los reportes anuales de los anos proporcionados." << endl;
+            }
+            break;
+        default:
+            cout << "Opcion no valida. Por favor, elige una opcion del 1 al 3." << endl;
+            break;
+    }
+}
+
+void compararReportesDiarios(fecha fechaABuscar1, fecha fechaABuscar2) {
+    FILE *archivoReportesDiarios = fopen("REPORTESDIARIOS.txt", "r");
+    reporteDia reporteDiario1, reporteDiario2;
+
+    while (fscanf(archivoReportesDiarios, "%d,%d,%d,%f,%f,%f", &reporteDiario1.dia, &reporteDiario1.mes, &reporteDiario1.ano, &reporteDiario1.totalIngresos, &reporteDiario1.totalGastos, &reporteDiario1.totalDia) != EOF) {
+        if (reporteDiario1.dia == fechaABuscar1.dia && reporteDiario1.mes == fechaABuscar1.mes && reporteDiario1.ano == fechaABuscar1.ano) {
+            break;
+        }
+    }
+
+    while (fscanf(archivoReportesDiarios, "%d,%d,%d,%f,%f,%f", &reporteDiario2.dia, &reporteDiario2.mes, &reporteDiario2.ano, &reporteDiario2.totalIngresos, &reporteDiario2.totalGastos, &reporteDiario2.totalDia) != EOF) {
+        if (reporteDiario2.dia == fechaABuscar2.dia && reporteDiario2.mes == fechaABuscar2.mes && reporteDiario2.ano == fechaABuscar2.ano) {
+            break;
+        }
+    }
+
+    fclose(archivoReportesDiarios);
+
+    float cambioTotalIngresos = (reporteDiario2.totalIngresos - reporteDiario1.totalIngresos) / reporteDiario1.totalIngresos * 100;
+    float cambioTotalGastos = (reporteDiario2.totalGastos - reporteDiario1.totalGastos) / reporteDiario1.totalGastos * 100;
+    float cambioTotalDia = (reporteDiario2.totalDia - reporteDiario1.totalDia) / reporteDiario1.totalDia * 100;
+
+    cout << "Reporte diario 1: " << reporteDiario1.totalIngresos << ", " << reporteDiario1.totalGastos << ", " << reporteDiario1.totalDia << endl;
+    cout << "Reporte diario 2: " << reporteDiario2.totalIngresos << ", " << reporteDiario2.totalGastos << ", " << reporteDiario2.totalDia << endl;
+    cout << "Cambio: " << cambioTotalIngresos << "%, " << cambioTotalGastos << "%, " << cambioTotalDia << "%" << endl;
+}
+
+void compararReportesMensuales(int mesABuscar1, int anoABuscar1, int mesABuscar2, int anoABuscar2) {
+    FILE *archivoReportesMensuales = fopen("REPORTESMENSUALES.txt", "r");
+    reporteMes reporteMensual1, reporteMensual2;
+
+    while (fscanf(archivoReportesMensuales, "%d,%d,%f,%f,%f,%f,%f", &reporteMensual1.mes, &reporteMensual1.ano, &reporteMensual1.totalIngresos, &reporteMensual1.totalGastos, &reporteMensual1.promedioIngresosDiario, &reporteMensual1.promedioGastosDiario, &reporteMensual1.totalMes) != EOF) {
+        if (reporteMensual1.mes == mesABuscar1 && reporteMensual1.ano == anoABuscar1) {
+            break;
+        }
+    }
+
+    while (fscanf(archivoReportesMensuales, "%d,%d,%f,%f,%f,%f,%f", &reporteMensual2.mes, &reporteMensual2.ano, &reporteMensual2.totalIngresos, &reporteMensual2.totalGastos, &reporteMensual2.promedioIngresosDiario, &reporteMensual2.promedioGastosDiario, &reporteMensual2.totalMes) != EOF) {
+        if (reporteMensual2.mes == mesABuscar2 && reporteMensual2.ano == anoABuscar2) {
+            break;
+        }
+    }
+
+    fclose(archivoReportesMensuales);
+
+    float cambioTotalIngresos = (reporteMensual2.totalIngresos - reporteMensual1.totalIngresos) / reporteMensual1.totalIngresos * 100;
+    float cambioTotalGastos = (reporteMensual2.totalGastos - reporteMensual1.totalGastos) / reporteMensual1.totalGastos * 100;
+    float cambioPromedioIngresosDiario = (reporteMensual2.promedioIngresosDiario - reporteMensual1.promedioIngresosDiario) / reporteMensual1.promedioIngresosDiario * 100;
+    float cambioPromedioGastosDiario = (reporteMensual2.promedioGastosDiario - reporteMensual1.promedioGastosDiario) / reporteMensual1.promedioGastosDiario * 100;
+    float cambioTotalMes = (reporteMensual2.totalMes - reporteMensual1.totalMes) / reporteMensual1.totalMes * 100;
+
+    cout << "Reporte mensual 1: " << reporteMensual1.totalIngresos << ", " << reporteMensual1.totalGastos << ", " << reporteMensual1.promedioIngresosDiario << ", " << reporteMensual1.promedioGastosDiario << ", " << reporteMensual1.totalMes << endl;
+    cout << "Reporte mensual 2: " << reporteMensual2.totalIngresos << ", " << reporteMensual2.totalGastos << ", " << reporteMensual2.promedioIngresosDiario << ", " << reporteMensual2.promedioGastosDiario << ", " << reporteMensual2.totalMes << endl;
+    cout << "Cambio: " << cambioTotalIngresos << "%, " << cambioTotalGastos << "%, " << cambioPromedioIngresosDiario << "%, " << cambioPromedioGastosDiario << "%, " << cambioTotalMes << "%" << endl;
+}
+
+void compararReportesAnuales(int anoABuscar1, int anoABuscar2) {
+    FILE *archivoReportesAnuales = fopen("REPORTESANUALES.txt", "r");
+    reporteAno reporteAnual1, reporteAnual2;
+
+    while (fscanf(archivoReportesAnuales, "%d,%f,%f,%f,%f,%f", &reporteAnual1.ano, &reporteAnual1.totalIngresos, &reporteAnual1.totalGastos, &reporteAnual1.promedioIngresosMensual, &reporteAnual1.promedioGasrosMensal, &reporteAnual1.totalAno) != EOF) {
+        if (reporteAnual1.ano == anoABuscar1) {
+            break;
+        }
+    }
+
+    while (fscanf(archivoReportesAnuales, "%d,%f,%f,%f,%f,%f", &reporteAnual2.ano, &reporteAnual2.totalIngresos, &reporteAnual2.totalGastos, &reporteAnual2.promedioIngresosMensual, &reporteAnual2.promedioGasrosMensal, &reporteAnual2.totalAno) != EOF) {
+        if (reporteAnual2.ano == anoABuscar2) {
+            break;
+        }
+    }
+
+    fclose(archivoReportesAnuales);
+
+    float cambioTotalIngresos = (reporteAnual2.totalIngresos - reporteAnual1.totalIngresos) / reporteAnual1.totalIngresos * 100;
+    float cambioTotalGastos = (reporteAnual2.totalGastos - reporteAnual1.totalGastos) / reporteAnual1.totalGastos * 100;
+    float cambioPromedioIngresosMensual = (reporteAnual2.promedioIngresosMensual - reporteAnual1.promedioIngresosMensual) / reporteAnual1.promedioIngresosMensual * 100;
+    float cambioPromedioGastosMensual = (reporteAnual2.promedioGasrosMensal - reporteAnual1.promedioGasrosMensal) / reporteAnual1.promedioGasrosMensal * 100;
+    float cambioTotalAno = (reporteAnual2.totalAno - reporteAnual1.totalAno) / reporteAnual1.totalAno * 100;
+
+    cout << "Reporte anual 1: " << reporteAnual1.totalIngresos << ", " << reporteAnual1.totalGastos << ", " << reporteAnual1.promedioIngresosMensual << ", " << reporteAnual1.promedioGasrosMensal << ", " << reporteAnual1.totalAno << endl;
+    cout << "Reporte anual 2: " << reporteAnual2.totalIngresos << ", " << reporteAnual2.totalGastos << ", " << reporteAnual2.promedioIngresosMensual << ", " << reporteAnual2.promedioGasrosMensal << ", " << reporteAnual2.totalAno << endl;
+    cout << "Cambio: " << cambioTotalIngresos << "%, " << cambioTotalGastos << "%, " << cambioPromedioIngresosMensual << "%, " << cambioPromedioGastosMensual << "%, " << cambioTotalAno << "%" << endl;
+}
+
+
 void crearReportes() {
     // Crear un reporte diario con la fecha actual
     crearReporteDiario(datosGenerales.fechaActual);
+
+    //Crear reportes temporales
+    crearReporteMensualTemporal();
+    crearReporteAnualTemporal();
 
     // Si es el último día del mes, crear un reporte mensual
     if ((datosGenerales.fechaActual.mes == 4 || datosGenerales.fechaActual.mes == 6 || datosGenerales.fechaActual.mes == 9 || datosGenerales.fechaActual.mes == 11) && datosGenerales.fechaActual.dia == 30) {
@@ -593,7 +868,6 @@ int main()
     do {
     	system("cls||clear");
     	mostrarDatosGenerales();
-        guardarDatosAutomatizados();
         cout << "Elige una opcion:" << endl;
         cout << "1. Ingresar datos del dia" << endl;
         cout << "2. Automatizar datos" << endl;
@@ -624,6 +898,7 @@ int main()
             case 5:
                 crearReportes();
                 sumarUnDia();
+                guardarDatosAutomatizados();
                 system("pause");
                 break;
             case 6:
