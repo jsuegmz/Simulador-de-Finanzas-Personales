@@ -11,6 +11,7 @@ struct fecha
 
 struct general
 {
+    float saldoMinimo;
     float saldoActual;
     fecha fechaActual;
 } datosGenerales;
@@ -96,6 +97,7 @@ void ingresarDatosDiarios()
 {
     archivoHistorial = fopen("HISTORIAL.txt", "a");
     char opcion;
+    double saldoMinimo = datosGenerales.saldoMinimo;
     do
     {
         dias.fechaDia = datosGenerales.fechaActual;
@@ -106,6 +108,12 @@ void ingresarDatosDiarios()
         cin.getline(dias.descripcion, 100);
         cout << "Ingresa el monto: ";
         cin >> dias.monto;
+
+        if (dias.tipoTransaccion == 2 && dias.monto > saldoMinimo)
+        {
+            cout << "No puedes realizar este gasto, supera tu saldo mínimo establecido." << endl;
+            continue;
+        }
 
         fprintf(archivoHistorial, "%d,%d,%d,%d,%f,%s\n", dias.fechaDia.dia, dias.fechaDia.mes, dias.fechaDia.ano, dias.tipoTransaccion, dias.monto, dias.descripcion);
         cout << "¿Desea ingresar otro dato? (S/N): ";
@@ -463,6 +471,16 @@ void datosIniciales()
             }
         } while (datosGenerales.saldoActual < 0);
 
+        do
+        {
+            cout << "Ingresa tu saldo minimo: ";
+            cin >> datosGenerales.saldoMinimo;
+            if (datosGenerales.saldoMinimo < 0)
+            {
+                cout << "Error: El saldo mínimo no puede ser negativo. Inténtalo de nuevo." << endl;
+            }
+        } while (datosGenerales.saldoMinimo < 0);
+
         cout << "Ingresa la fecha actual" << endl;
         cout << "Dia: ";
         cin >> datosGenerales.fechaActual.dia;
@@ -471,7 +489,7 @@ void datosIniciales()
         cout << "Año: ";
         cin >> datosGenerales.fechaActual.ano;
         archivoGeneral = fopen("GENERAL.txt", "w");
-        fprintf(archivoGeneral, "%f,%d,%d,%d\n", datosGenerales.saldoActual, datosGenerales.fechaActual.dia, datosGenerales.fechaActual.mes, datosGenerales.fechaActual.ano);
+        fprintf(archivoGeneral, "%f,%f,%d,%d,%d\n", datosGenerales.saldoActual, datosGenerales.saldoMinimo, datosGenerales.fechaActual.dia, datosGenerales.fechaActual.mes, datosGenerales.fechaActual.ano);
         fclose(archivoGeneral);
     }
 }
@@ -583,7 +601,7 @@ void conseguirDatosGenerales()
 {
     archivoGeneral = fopen("GENERAL.txt", "r");
 
-    fscanf(archivoGeneral, "%f,%d,%d,%d", &datosGenerales.saldoActual, &datosGenerales.fechaActual.dia, &datosGenerales.fechaActual.mes, &datosGenerales.fechaActual.ano);
+    fscanf(archivoGeneral, "%f,%f,%d,%d,%d", &datosGenerales.saldoActual, &datosGenerales.saldoMinimo, &datosGenerales.fechaActual.dia, &datosGenerales.fechaActual.mes, &datosGenerales.fechaActual.ano);
     fclose(archivoGeneral);
 }
 
@@ -593,6 +611,7 @@ void mostrarDatosGenerales()
     conseguirDatosGenerales();
 
     cout << "Saldo actual: " << datosGenerales.saldoActual << endl;
+    cout << "Saldo Minimo:" << datosGenerales.saldoMinimo << endl;
     cout << "Fecha actual: " << datosGenerales.fechaActual.dia << "/" << datosGenerales.fechaActual.mes << "/" << datosGenerales.fechaActual.ano << endl;
 }
 
